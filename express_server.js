@@ -55,7 +55,11 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls", (req, res) => {
   //console.log(req.body); // Log the POST request body to the console
   const templateVars = generateRandomString();
-  urlDatabase[templateVars] = req.body.longURL;
+  if (req.body.longURL.includes("https://") || req.body.longURL.includes("http://")) {
+    urlDatabase[templateVars] = req.body.longURL;
+  } else {
+    urlDatabase[templateVars] = `https://${req.body.longURL}`;
+  }
   //res.send(`ok`); // Respond with 'Ok' (we will replace this)
   res.redirect(`/urls/${templateVars}`);
 });
