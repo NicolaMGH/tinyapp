@@ -52,15 +52,15 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// app.post("/urls", (req, res) => {
-//   console.log(req.body); // Log the POST request body to the console
-//   res.send("Ok"); // Respond with 'Ok' (we will replace this)
-// });
-
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  //console.log(req.body); // Log the POST request body to the console
   const templateVars = generateRandomString();
   urlDatabase[templateVars] = req.body.longURL;
   //res.send(`ok`); // Respond with 'Ok' (we will replace this)
   res.redirect(`/urls/${templateVars}`);
+});
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id]
+  res.redirect(longURL);
 });
