@@ -12,6 +12,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
 function generateRandomString() {
   let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -104,3 +117,13 @@ app.post("/logout", (req, res) => {
   res.redirect('/urls');
 });
 
+app.post("/register", (req, res) => {
+  const randomId = generateRandomString();
+  users[randomId] = {
+    id: randomId,
+    email: req.body.email,
+    password: req.body.password
+  };
+  res.cookie('user_id', randomId);
+  res.redirect('/urls');
+});
