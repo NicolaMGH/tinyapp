@@ -37,11 +37,21 @@ const generateRandomString = () => {
     return result;
 }
 
+//get user by email and returns the user object
 const getUserByEmail = (emailToCheck) => {
 	for (let user in users) {
     let existingEmails = users[user].email;
     if(emailToCheck === existingEmails){
       return users[user];
+    }
+  }
+}
+
+//check if shorten URL exists
+const checkURL = (id) => {
+	for (let url in urlDatabase) {
+    if(id === urlDatabase[url]){
+      return true;
     }
   }
 }
@@ -71,10 +81,14 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { 
-    user: users[req.cookies.user_id]
+  if (req.cookies.user_id) {
+    const templateVars = { 
+      user: users[req.cookies.user_id]
+    };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect('/login');
   };
-  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -84,19 +98,28 @@ app.get("/urls/:id", (req, res) => {
 
 app.post("/urls", (req, res) => {
   //console.log(req.body); // Log the POST request body to the console
-  const templateVars = generateRandomString();
-  if (req.body.longURL.includes("https://") || req.body.longURL.includes("http://")) {
-    urlDatabase[templateVars] = req.body.longURL;
+  if (req.cookies.user_id) {
+    const randomId = generateRandomString();
+    if (req.body.longURL.includes("https://") || req.body.longURL.includes("http://")) {
+      urlDatabase[randomId] = req.body.longURL;
+    } else {
+      urlDatabase[randomId] = `https://${req.body.longURL}`;
+    }
+    //res.send(`ok`); // Respond with 'Ok' (we will replace this)
+    res.redirect(`/urls/${randomId}`);
   } else {
-    urlDatabase[templateVars] = `https://${req.body.longURL}`;
-  }
-  //res.send(`ok`); // Respond with 'Ok' (we will replace this)
-  res.redirect(`/urls/${templateVars}`);
+    res.send("Please login to shorten URL");
+    res.redirect('/login');
+  };
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]
-  res.redirect(longURL);
+  if (checkURL(req.params.id)) {
+    const longURL = urlDatabase[req.params.id]
+    res.redirect(longURL);
+  } else {
+    res.send('Sorry, URL not found.')
+  }
 });
 
 app.get("/register", (req, res) => {
@@ -107,7 +130,7 @@ app.get("/register", (req, res) => {
       user: users[req.cookies.user_id]
     };
     res.render("register", templateVars);
-  }
+  };
 });
 
 app.get("/login", (req, res) => {
@@ -118,7 +141,7 @@ app.get("/login", (req, res) => {
       user: users[req.cookies.user_id]
     };
     res.render("login", templateVars);
-  }
+  };
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -127,7 +150,11 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id/edit", (req, res) => {
-  urlDatabase[req.params.id] = req.body.newURL
+  if (req.body.newURL.includes("https://") || req.body.newURL.includes("http://")) {
+    urlDatabase[req.params.id] = req.body.newURL
+    } else {
+      urlDatabase[req.params.id] = `https://${req.body.newURL}`;
+    }
   res.redirect('/urls');
 });
 
