@@ -19,12 +19,45 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">
-          Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
+          Short URL ID: <a href="/u/<%= shortUrl %>"><%= shortUrl %></a>
         </p>
       </div>
       <div class="card-footer text-muted" >
         <h3 class="card-title">Edit</h3>
-        <form action="/urls/<%= id %>/edit" method="POST">
+        <% if (!user) { %>
+          <div class="alert alert-warning" role="alert">
+            This link was not created by you.
+            Please <a href="/login" class="alert-link">login</a> or <a href="/register" class="alert-link">register</a> to view and edit Short URLs created by you.
+          </div>
+          <form action="/urls/<%= shortUrl %>/edit" method="POST">
+            <label for="newURL">New URL:</label>
+            <input
+              type="text"
+              name="newURL"
+              value="<%= longURL %>"
+              style="width: 300px; margin: 1em"
+              disabled
+            />
+            <button type="button" class="btn btn-primary" disabled data-bs-toggle="button" autocomplete="off">Submit</button>
+          </form>
+        <% } else if (user.id !== databaseUserID) { %>
+          <div class="alert alert-warning" role="alert">
+            This link was not created by you.
+            Please <a href="/login" class="alert-link">login</a> or <a href="/register" class="alert-link">register</a> to view and edit Short URLs created by you.
+          </div>
+          <form action="/urls/<%= shortUrl %>/edit" method="POST">
+            <label for="newURL">New URL:</label>
+            <input
+              type="text"
+              name="newURL"
+              value="<%= longURL %>"
+              style="width: 300px; margin: 1em"
+              disabled
+            />
+            <button type="button" class="btn btn-primary" disabled data-bs-toggle="button" autocomplete="off">Submit</button>
+          </form>
+        <% } else { %>
+          <form action="/urls/<%= shortUrl %>/edit" method="POST">
             <label for="newURL">New URL:</label>
             <input
               type="text"
@@ -33,7 +66,8 @@
               style="width: 300px; margin: 1em"
             />
             <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+          </form>
+        <% } %>
       </div>
     </div>
     <!-- Bootstrap JS -->
