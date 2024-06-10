@@ -143,9 +143,11 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  const emailLength = req.body.email.trim().length;
+  const passwordLength = req.body.password.trim().length;
   if (getUserByEmail(req.body.email)) {
     res.status(400).send('Sorry, email already exisits.')
-  } else if (req.body.email.length === 0 || req.body.password.length === 0){
+  } else if (emailLength === 0 || passwordLength === 0){
     res.status(400).send('Sorry, email or password field empty.')
   } else {
     const randomId = generateRandomString();
