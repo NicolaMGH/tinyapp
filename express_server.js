@@ -130,24 +130,6 @@ app.get("/urls/:shortUrl", (req, res) => {
   }
 });
 
-app.post("/urls", (req, res) => {
-  //console.log(req.body); // Log the POST request body to the console
-  if (req.cookies.user_id) {
-    const randomId = generateRandomString();
-    if (req.body.longURL.includes("https://") || req.body.longURL.includes("http://")) {
-      urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.cookies.user_id};
-    } else {
-      urlDatabase[randomId] = {longURL:`https://${req.body.longURL}`, userID: req.cookies.user_id};
-    }
-    //res.send(`ok`); // Respond with 'Ok' (we will replace this)
-    console.log(urlDatabase);
-    res.redirect(`/urls/${randomId}`);
-  } else {
-    res.status(401).send("Please login to shorten URL");
-    res.redirect('/login');
-  };
-});
-
 app.get("/u/:id", (req, res) => {
   if (checkURL(req.params.id)) {
     const longURL = urlDatabase[req.params.id].longURL
@@ -179,18 +161,52 @@ app.get("/login", (req, res) => {
   };
 });
 
+app.post("/urls", (req, res) => {
+  //console.log(req.body); // Log the POST request body to the console
+  if (req.cookies.user_id) {
+    const randomId = generateRandomString();
+    if (req.body.longURL.includes("https://") || req.body.longURL.includes("http://")) {
+      urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.cookies.user_id};
+    } else {
+      urlDatabase[randomId] = {longURL:`https://${req.body.longURL}`, userID: req.cookies.user_id};
+    }
+    //res.send(`ok`); // Respond with 'Ok' (we will replace this)
+    console.log(urlDatabase);
+    res.redirect(`/urls/${randomId}`);
+  } else {
+    res.status(401).send("Please login to shorten URL");
+    res.redirect('/login');
+  };
+});
+
 app.post("/urls/:shortUrl/delete", (req, res) => {
-  delete urlDatabase[req.params.shortUrl]
-  res.redirect('/urls');
+  const userID = req.cookies.user_id;
+  const userURLs = urlsForUser(userID);
+  if (Object.keys(userURLs).includes(req.params.shortUrl)) {
+    delete urlDatabase[req.params.shortUrl]
+    res.redirect('/urls');
+  } else if (urlDatabase[req.params.shortUrl]) {
+    res.status(401).send("You do not have authorization to delete this URL.");
+  } else {
+    res.status(404).send("URL doesn't exist.");
+  };
 });
 
 app.post("/urls/:shortUrl/edit", (req, res) => {
-  if (req.body.newURL.includes("https://") || req.body.newURL.includes("http://")) {
+  const userID = req.cookies.user_id;
+  const userURLs = urlsForUser(userID);
+  if (Object.keys(userURLs).includes(req.params.shortUrl)) {
+    if (req.body.newURL.includes("https://") || req.body.newURL.includes("http://")) {
     urlDatabase[req.params.shortUrl].longURL = req.body.newURL
     } else {
       urlDatabase[req.params.shortUrl].longURL = `https://${req.body.newURL}`;
     }
-  res.redirect('/urls');
+    res.redirect('/urls');
+  } else if (urlDatabase[req.params.shortUrl]) {
+    res.status(401).send("You do not have authorization to edit this URL.");
+  } else {
+    res.status(404).send("URL doesn't exist.");
+  };
 });
 
 app.post("/login", (req, res) => {
