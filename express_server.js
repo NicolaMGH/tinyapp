@@ -175,7 +175,6 @@ app.post("/urls", (req, res) => {
     res.redirect(`/urls/${randomId}`);
   } else {
     res.status(401).send("Please login to shorten URL");
-    res.redirect('/login');
   };
 });
 
@@ -239,8 +238,8 @@ app.post("/register", (req, res) => {
     const randomId = generateRandomString();
       users[randomId] = {
       id: randomId,
-      email: req.body.email,
-      password: req.body.password
+      email: req.body.email.trim(),
+      password: req.body.password.trim()
     };
     res.cookie('user_id', randomId);
     res.redirect('/urls');
