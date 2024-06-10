@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser')
+const bcrypt = require("bcryptjs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 
@@ -12,30 +13,10 @@ app.set("view engine", "ejs");
 //   "9sm5xK": "http://www.google.com"
 // };
 
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
+const urlDatabase = {};
 
 
-const users = {
-  aJ48lW: {
-    id: "aJ48lW",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
+const users = {};
 
 //Generates a random string, used for creating short URLs and userIDs
 const generateRandomString = () => {
@@ -169,9 +150,7 @@ app.post("/urls", (req, res) => {
       urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.cookies.user_id};
     } else {
       urlDatabase[randomId] = {longURL:`https://${req.body.longURL}`, userID: req.cookies.user_id};
-    }
-    //res.send(`ok`); // Respond with 'Ok' (we will replace this)
-    console.log(urlDatabase);
+    };
     res.redirect(`/urls/${randomId}`);
   } else {
     res.status(401).send("Please login to shorten URL");
@@ -211,7 +190,7 @@ app.post("/urls/:shortUrl/edit", (req, res) => {
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email);
   if (user) {
-    if (user.password === req.body.password) {
+    if (bcrypt.compareSync(req.body.password, user.password)) {
       res.cookie('user_id', user.id);
       res.redirect('/urls');
     } else {
@@ -239,8 +218,9 @@ app.post("/register", (req, res) => {
       users[randomId] = {
       id: randomId,
       email: req.body.email.trim(),
-      password: req.body.password.trim()
+      password: bcrypt.hashSync(req.body.password.trim(), 10)
     };
+    console.log(users)
     res.cookie('user_id', randomId);
     res.redirect('/urls');
   };
