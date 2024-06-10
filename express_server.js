@@ -41,7 +41,7 @@ const getUserByEmail = (emailToCheck) => {
 	for (let user in users) {
     let existingEmails = users[user].email;
     if(emailToCheck === existingEmails){
-      return true;
+      return users[user];
     }
   }
 }
