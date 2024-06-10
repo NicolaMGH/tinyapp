@@ -7,10 +7,22 @@ app.use(cookieParser())
 
 app.set("view engine", "ejs");
 
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
+
 
 const users = {
   userRandomID: {
@@ -50,7 +62,7 @@ const getUserByEmail = (emailToCheck) => {
 //check if shorten URL exists
 const checkURL = (id) => {
 	for (let url in urlDatabase) {
-    if(id === urlDatabase[url]){
+    if(id === url){
       return true;
     }
   }
@@ -92,7 +104,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id] };
   res.render("urls_show", templateVars);
 });
 
@@ -101,9 +113,9 @@ app.post("/urls", (req, res) => {
   if (req.cookies.user_id) {
     const randomId = generateRandomString();
     if (req.body.longURL.includes("https://") || req.body.longURL.includes("http://")) {
-      urlDatabase[randomId] = req.body.longURL;
+      urlDatabase[randomId] = {longURL: req.body.longURL};
     } else {
-      urlDatabase[randomId] = `https://${req.body.longURL}`;
+      urlDatabase[randomId] = {longURL:`https://${req.body.longURL}`};
     }
     //res.send(`ok`); // Respond with 'Ok' (we will replace this)
     res.redirect(`/urls/${randomId}`);
@@ -115,7 +127,7 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   if (checkURL(req.params.id)) {
-    const longURL = urlDatabase[req.params.id]
+    const longURL = urlDatabase[req.params.id].longURL
     res.redirect(longURL);
   } else {
     res.send('Sorry, URL not found.')
@@ -151,9 +163,9 @@ app.post("/urls/:id/delete", (req, res) => {
 
 app.post("/urls/:id/edit", (req, res) => {
   if (req.body.newURL.includes("https://") || req.body.newURL.includes("http://")) {
-    urlDatabase[req.params.id] = req.body.newURL
+    urlDatabase[req.params.id].longURL = req.body.newURL
     } else {
-      urlDatabase[req.params.id] = `https://${req.body.newURL}`;
+      urlDatabase[req.params.id].longURL = `https://${req.body.newURL}`;
     }
   res.redirect('/urls');
 });
