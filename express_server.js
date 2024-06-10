@@ -25,7 +25,7 @@ const users = {
   },
 };
 
-function generateRandomString() {
+const generateRandomString = () => {
   let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const charactersLength = characters.length;
@@ -35,6 +35,15 @@ function generateRandomString() {
       counter += 1;
     }
     return result;
+}
+
+const getUserByEmail = (emailToCheck) => {
+	for (let user in users) {
+    let existingEmails = users[user].email;
+    if(emailToCheck === existingEmails){
+      return true;
+    }
+  }
 }
 
 app.get("/", (req, res) => {
@@ -118,12 +127,18 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const randomId = generateRandomString();
-  users[randomId] = {
-    id: randomId,
-    email: req.body.email,
-    password: req.body.password
+  if (getUserByEmail(req.body.email)) {
+    res.status(400).send('Sorry, email already exisits.')
+  } else if (req.body.email.length === 0 || req.body.password.length === 0){
+    res.status(400).send('Sorry, email or password field empty.')
+  } else {
+    const randomId = generateRandomString();
+      users[randomId] = {
+      id: randomId,
+      email: req.body.email,
+      password: req.body.password
+    };
+    res.cookie('user_id', randomId);
+    res.redirect('/urls');
   };
-  res.cookie('user_id', randomId);
-  res.redirect('/urls');
 });
