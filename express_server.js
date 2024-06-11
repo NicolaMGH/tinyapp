@@ -4,6 +4,10 @@ const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 const { getUserByEmail, generateRandomString, checkURL, urlsForUser, cookieMatchUser } = require("./helpers"); 
+const methodOverride = require('method-override');
+
+// override with POST having ?_method=DELETE
+app.use(methodOverride('_method'))
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -116,7 +120,7 @@ app.post("/urls", (req, res) => {
 });
 
 //delete url
-app.post("/urls/:shortUrl/delete", (req, res) => {
+app.delete("/urls/:shortUrl/delete", (req, res) => {
   const userID = req.session.user_id;
   const userURLs = urlsForUser(userID, urlDatabase);
   if (Object.keys(userURLs).includes(req.params.shortUrl)) {
@@ -130,7 +134,7 @@ app.post("/urls/:shortUrl/delete", (req, res) => {
 });
 
 //edit url
-app.post("/urls/:shortUrl/edit", (req, res) => {
+app.put("/urls/:shortUrl/edit", (req, res) => {
   const userID = req.session.user_id;
   const userURLs = urlsForUser(userID, urlDatabase);
   if (Object.keys(userURLs).includes(req.params.shortUrl)) {

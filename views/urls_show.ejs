@@ -29,7 +29,7 @@
             This link was not created by you.
             Please <a href="/login" class="alert-link">login</a> or <a href="/register" class="alert-link">register</a> to view and edit Short URLs created by you.
           </div>
-          <form action="/urls/<%= shortUrl %>/edit" method="POST">
+          <form action="/urls/<%= shortUrl %>/edit?_method=PUT" method="POST">
             <label for="newURL">New URL:</label>
             <input
               type="text"
@@ -45,7 +45,7 @@
             This link was not created by you.
             Please <a href="/login" class="alert-link">login</a> or <a href="/register" class="alert-link">register</a> to view and edit Short URLs created by you.
           </div>
-          <form action="/urls/<%= shortUrl %>/edit" method="POST">
+          <form action="/urls/<%= shortUrl %>/edit?_method=PUT" method="POST">
             <label for="newURL">New URL:</label>
             <input
               type="text"
@@ -57,7 +57,7 @@
             <button type="button" class="btn btn-primary" disabled data-bs-toggle="button" autocomplete="off">Submit</button>
           </form>
         <% } else { %>
-          <form action="/urls/<%= shortUrl %>/edit" method="POST">
+          <form action="/urls/<%= shortUrl %>/edit?_method=PUT" method="POST">
             <label for="newURL">New URL:</label>
             <input
               type="text"
