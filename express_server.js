@@ -4,7 +4,9 @@ const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 const { getUserByEmail, generateRandomString, checkURL, urlsForUser, cookieMatchUser } = require("./helpers"); 
+
 app.use(express.urlencoded({ extended: true }));
+
 app.use(cookieSession({
   name: 'session',
   keys: ['NICK'],
@@ -18,6 +20,7 @@ const urlDatabase = {};
 
 const users = {};
 
+//routes
 app.get("/", (req, res) => {
   if (cookieMatchUser(req.session.user_id, users)) {
     res.redirect("/urls");
@@ -26,6 +29,7 @@ app.get("/", (req, res) => {
   }
 });
 
+//shows urls that the user created
 app.get("/urls", (req, res) => {
   const templateVars = { 
     user: users[req.session.user_id],
@@ -34,6 +38,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//shows new url creation page
 app.get("/urls/new", (req, res) => {
   if (cookieMatchUser(req.session.user_id, users)) {
     const templateVars = { 
@@ -45,6 +50,7 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+//shows url specific details
 app.get("/urls/:shortUrl", (req, res) => {
   if (urlDatabase[req.params.shortUrl]) {
     const templateVars = { 
@@ -59,6 +65,7 @@ app.get("/urls/:shortUrl", (req, res) => {
   }
 });
 
+//uses shortened url to redirect to long url
 app.get("/u/:id", (req, res) => {
   if (checkURL(req.params.id, urlDatabase)) {
     const longURL = urlDatabase[req.params.id].longURL
@@ -68,6 +75,7 @@ app.get("/u/:id", (req, res) => {
   }
 });
 
+//shows register page if no user is logged in
 app.get("/register", (req, res) => {
   if (cookieMatchUser(req.session.user_id, users)) {
     res.redirect('/urls');
@@ -79,6 +87,7 @@ app.get("/register", (req, res) => {
   }
 });
 
+//shows login page if no user is logged in
 app.get("/login", (req, res) => {
   if (cookieMatchUser(req.session.user_id, users)) {
     res.redirect('/urls');
@@ -90,6 +99,7 @@ app.get("/login", (req, res) => {
   }
 });
 
+//creates new url and assigns user id
 app.post("/urls", (req, res) => {
   //console.log(req.body); // Log the POST request body to the console
   if (req.session.user_id) {
@@ -105,6 +115,7 @@ app.post("/urls", (req, res) => {
   }
 });
 
+//delete url
 app.post("/urls/:shortUrl/delete", (req, res) => {
   const userID = req.session.user_id;
   const userURLs = urlsForUser(userID, urlDatabase);
@@ -118,6 +129,7 @@ app.post("/urls/:shortUrl/delete", (req, res) => {
   }
 });
 
+//edit url
 app.post("/urls/:shortUrl/edit", (req, res) => {
   const userID = req.session.user_id;
   const userURLs = urlsForUser(userID, urlDatabase);
@@ -135,6 +147,7 @@ app.post("/urls/:shortUrl/edit", (req, res) => {
   }
 });
 
+//checks if email exists and compares password to login
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
   if (user) {
@@ -149,11 +162,13 @@ app.post("/login", (req, res) => {
   }
 });
 
+//logs user out and clears session cookie
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect('/login');
 });
 
+//creates user account storing email, hashed password and id
 app.post("/register", (req, res) => {
   const emailLength = req.body.email.trim().length;
   const passwordLength = req.body.password.trim().length;
