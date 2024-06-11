@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
-const { getUserByEmail, generateRandomString, checkURL, urlsForUser } = require("./helpers"); 
+const { getUserByEmail, generateRandomString, checkURL, urlsForUser, cookieMatchUser } = require("./helpers"); 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
@@ -19,19 +19,11 @@ const urlDatabase = {};
 const users = {};
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  if (cookieMatchUser(req.session.user_id, users)) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls", (req, res) => {
@@ -43,14 +35,14 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  if (req.session.user_id) {
+  if (cookieMatchUser(req.session.user_id, users)) {
     const templateVars = { 
       user: users[req.session.user_id]
     };
     res.render("urls_new", templateVars);
   } else {
     res.redirect('/login');
-  };
+  }
 });
 
 app.get("/urls/:shortUrl", (req, res) => {
@@ -77,25 +69,25 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  if (req.session.user_id) {
+  if (cookieMatchUser(req.session.user_id, users)) {
     res.redirect('/urls');
   } else {
     const templateVars = { 
       user: users[req.session.user_id]
     };
     res.render("register", templateVars);
-  };
+  }
 });
 
 app.get("/login", (req, res) => {
-  if (req.session.user_id) {
+  if (cookieMatchUser(req.session.user_id, users)) {
     res.redirect('/urls');
   } else {
     const templateVars = { 
       user: users[req.session.user_id]
     };
     res.render("login", templateVars);
-  };
+  }
 });
 
 app.post("/urls", (req, res) => {
@@ -106,11 +98,11 @@ app.post("/urls", (req, res) => {
       urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.session.user_id};
     } else {
       urlDatabase[randomId] = {longURL:`https://${req.body.longURL}`, userID: req.session.user_id};
-    };
+    }
     res.redirect(`/urls/${randomId}`);
   } else {
     res.status(401).send("Please login to shorten URL");
-  };
+  }
 });
 
 app.post("/urls/:shortUrl/delete", (req, res) => {
@@ -123,7 +115,7 @@ app.post("/urls/:shortUrl/delete", (req, res) => {
     res.status(401).send("You do not have authorization to delete this URL.");
   } else {
     res.status(404).send("URL doesn't exist.");
-  };
+  }
 });
 
 app.post("/urls/:shortUrl/edit", (req, res) => {
@@ -140,7 +132,7 @@ app.post("/urls/:shortUrl/edit", (req, res) => {
     res.status(401).send("You do not have authorization to edit this URL.");
   } else {
     res.status(404).send("URL doesn't exist.");
-  };
+  }
 });
 
 app.post("/login", (req, res) => {
@@ -154,7 +146,7 @@ app.post("/login", (req, res) => {
     }
   } else{
     res.status(403).send('Sorry, email not found.')
-  };
+  }
 });
 
 app.post("/logout", (req, res) => {
@@ -178,5 +170,9 @@ app.post("/register", (req, res) => {
     };
     req.session.user_id = randomId;
     res.redirect('/urls');
-  };
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
