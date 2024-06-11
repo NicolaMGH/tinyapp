@@ -1,8 +1,9 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-var cookieSession = require('cookie-session');
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
+const { getUserByEmail, generateRandomString, checkURL, urlsForUser } = require("./helpers"); 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
@@ -16,50 +17,6 @@ app.set("view engine", "ejs");
 const urlDatabase = {};
 
 const users = {};
-
-//Generates a random string, used for creating short URLs and userIDs
-const generateRandomString = () => {
-  let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    let counter = 0;
-    while (counter < 6) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-      counter += 1;
-    }
-    return result;
-}
-
-//get user by email and returns the user object
-const getUserByEmail = (emailToCheck) => {
-	for (let user in users) {
-    let existingEmails = users[user].email;
-    if(emailToCheck === existingEmails){
-      return users[user];
-    }
-  }
-}
-
-//check if shorten URL exists
-const checkURL = (id) => {
-	for (let url in urlDatabase) {
-    if(id === url){
-      return true;
-    }
-  }
-};
-
-//Returns an object of short URLs specific to the passed in userID
-const urlsForUser = (id) => {
-  let userUrls = {};
-  for (let shortUrl in urlDatabase) {
-    let userId = urlDatabase[shortUrl].userID;
-    if(userId === id){
-      userUrls[shortUrl] = urlDatabase[shortUrl];
-  	}
-	}
-   return userUrls;
-};
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -80,7 +37,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
     user: users[req.session.user_id],
-    urls: urlsForUser(req.session.user_id)
+    urls: urlsForUser(req.session.user_id, urlDatabase)
   };
   res.render("urls_index", templateVars);
 });
@@ -111,7 +68,7 @@ app.get("/urls/:shortUrl", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  if (checkURL(req.params.id)) {
+  if (checkURL(req.params.id, urlDatabase)) {
     const longURL = urlDatabase[req.params.id].longURL
     res.redirect(longURL);
   } else {
@@ -158,7 +115,7 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:shortUrl/delete", (req, res) => {
   const userID = req.session.user_id;
-  const userURLs = urlsForUser(userID);
+  const userURLs = urlsForUser(userID, urlDatabase);
   if (Object.keys(userURLs).includes(req.params.shortUrl)) {
     delete urlDatabase[req.params.shortUrl]
     res.redirect('/urls');
@@ -171,7 +128,7 @@ app.post("/urls/:shortUrl/delete", (req, res) => {
 
 app.post("/urls/:shortUrl/edit", (req, res) => {
   const userID = req.session.user_id;
-  const userURLs = urlsForUser(userID);
+  const userURLs = urlsForUser(userID, urlDatabase);
   if (Object.keys(userURLs).includes(req.params.shortUrl)) {
     if (req.body.newURL.includes("https://") || req.body.newURL.includes("http://")) {
     urlDatabase[req.params.shortUrl].longURL = req.body.newURL
@@ -187,10 +144,10 @@ app.post("/urls/:shortUrl/edit", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const user = getUserByEmail(req.body.email);
+  const user = getUserByEmail(req.body.email, users);
   if (user) {
-    if (bcrypt.compareSync(req.body.password, user.password)) {
-      req.session.user_id = user.id;
+    if (bcrypt.compareSync(req.body.password, users[user].password)) {
+      req.session.user_id = user;
       res.redirect('/urls');
     } else {
       res.status(403).send('Sorry, password is incorrect.')
@@ -208,7 +165,7 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   const emailLength = req.body.email.trim().length;
   const passwordLength = req.body.password.trim().length;
-  if (getUserByEmail(req.body.email)) {
+  if (getUserByEmail(req.body.email, users)) {
     res.status(400).send('Sorry, email already exisits.')
   } else if (emailLength === 0 || passwordLength === 0){
     res.status(400).send('Sorry, email or password field empty.')
