@@ -61,7 +61,8 @@ app.get("/urls/:shortUrl", (req, res) => {
       shortUrl: req.params.shortUrl, 
       longURL: urlDatabase[req.params.shortUrl].longURL,
       databaseUserID: urlDatabase[req.params.shortUrl].userID,
-      user: users[req.session.user_id]
+      user: users[req.session.user_id],
+      timesVisited: urlDatabase[req.params.shortUrl].timesVisited
     };
     res.render("urls_show", templateVars);
   } else {
@@ -73,6 +74,7 @@ app.get("/urls/:shortUrl", (req, res) => {
 app.get("/u/:id", (req, res) => {
   if (checkURL(req.params.id, urlDatabase)) {
     const longURL = urlDatabase[req.params.id].longURL
+    urlDatabase[req.params.id].timesVisited += 1
     res.redirect(longURL);
   } else {
     res.send('Sorry, URL not found.')
@@ -109,9 +111,9 @@ app.post("/urls", (req, res) => {
   if (req.session.user_id) {
     const randomId = generateRandomString();
     if (req.body.longURL.includes("https://") || req.body.longURL.includes("http://")) {
-      urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.session.user_id};
+      urlDatabase[randomId] = {longURL: req.body.longURL, userID: req.session.user_id, timesVisited: 0};
     } else {
-      urlDatabase[randomId] = {longURL:`https://${req.body.longURL}`, userID: req.session.user_id};
+      urlDatabase[randomId] = {longURL:`https://${req.body.longURL}`, userID: req.session.user_id, timesVisited: 0};
     }
     res.redirect(`/urls/${randomId}`);
   } else {
